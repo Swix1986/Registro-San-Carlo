@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#000000" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>San Carlo · Target &amp; Giro Visite</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+  <style>
+    :root {
+      --bg-oled: #000000;
+      --surface-1: #0d1017;
+      --surface-2: #151924;
+      --surface-3: #1e2433;
+      --border: #262e40;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-red: #e11d48;
+      --accent-gold: #fbbf24;
+      --accent-cyan: #38bdf8;
+      --accent-emerald: #10b981;
+      --accent-purple: #a78bfa;
+      --accent-danger: #ef4444;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-oled);
+      color: var(--text-main);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .app-shell {
+      max-width: 480px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background-color: var(--bg-oled);
+      padding-bottom: 88px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top Bar */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-title {
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      line-height: 1.15;
+    }
+
+    .brand-sub {
+      font-size: 11px;
+      color: var(--accent-gold);
+      font-weight: 600;
+    }
+
+    .btn-sm {
+      background: var(--surface-2);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-sm:active {
+      transform: scale(0.97);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.14);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      border-radius: 10px;
+      padding: 7px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-danger.armed {
+      background: var(--accent-danger);
+      color: #ffffff;
+      border-color: var(--accent-danger);
+    }
+
+    /* Main Content */
+    .content {
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    /* Targets Grid */
+    .target-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--text-muted);
+    }
+
+    .targets-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .target-pill {
+      background: var(--surface-2);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 6px;
+      text-align: center;
+      cursor: pointer;
+      color: var(--text-main);
+    }
+
+    .target-pill.active {
+      border-color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.12);
+    }
+
+    .target-pill-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
+    .target-pill-val {
+      font-size: 14px;
+      font-weight: 900;
+      margin-top: 2px;
+    }
+
+    .edit-targets-box {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+      padding-top: 10px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .mini-field label {
+      display: block;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      font-weight: 700;
+    }
+
+    .mini-field input {
+      width: 100%;
+      background: var(--bg-oled);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    /* KPI Metrics */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .kpi-box {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .kpi-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .kpi-val {
+      font-size: 17px;
+      font-weight: 900;
+      margin-top: 3px;
+    }
+
+    .text-emerald { color: var(--accent-emerald); }
+    .text-cyan { color: var(--accent-cyan); }
+    .text-gold { color: var(--accent-gold); }
+    .text-red { color: #fb7185; }
+
+    .progress-wrap {
+      margin-top: 12px;
+      background: var(--surface-2);
+      border-radius: 999px;
+      height: 10px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-emerald));
+      transition: width 0.25s ease;
+    }
+
+    /* Day Selector Chips */
+    .days-scroll {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .day-chip {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .day-chip.active {
+      background: var(--accent-red);
+      border-color: var(--accent-red);
+      color: #ffffff;
+    }
+
+    /* Day Summary Banner */
+    .day-banner {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .day-banner-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 800;
+      font-size: 14px;
+    }
+
+    .day-stats-line {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Client Card - 3 Structured Blocks */
+    .client-card {
+      background: var(--surface-1);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .client-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .client-name {
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .fascia-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .fascia-A {
+      background: rgba(251, 191, 36, 0.16);
+      color: var(--accent-gold);
+      border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+
+    .fascia-B {
+      background: rgba(56, 189, 248, 0.16);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(56, 189, 248, 0.4);
+    }
+
+    .fascia-C {
+      background: rgba(167, 139, 250, 0.16);
+      color: var(--accent-purple);
+      border: 1px solid rgba(167, 139, 250, 0.4);
+    }
+
+    /* Block 1: Consigliato Deficit Incluso */
+    .block-consigliato {
+      background: rgba(16, 185, 129, 0.09);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .block-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .consigliato-amount {
+      font-size: 16px;
+      font-weight: 900;
+      color: var(--accent-emerald);
+    }
+
+    .deficit-tag {
+      font-size: 11px;
+      font-weight: 800;
+      color: var(--accent-gold);
+      display: block;
+      text-align: right;
+    }
+
+    /* Block 2: Fatturato Reale Realizzato */
+    .block-reale {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .reale-input-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .reale-input {
+      flex: 1;
+      background: var(--bg-oled);
+      border: 1.5px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-main);
+      font-size: 17px;
+      font-weight: 800;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+
+    .reale-input:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+    }
+
+    .btn-apply {
+      background: var(--accent-emerald);
+      color: #000000;
+      border: none;
+      border-radius: 10px;
+      padding: 9px 11px;
+      font-size: 12px;
+      font-weight: 900;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .quick-row {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+
+    .q-btn {
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 8px;
+      padding: 6px 4px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Block 3: Previsto in Base alla Fascia */
+    .block-fascia {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .fascia-expected-val {
+      font-weight: 800;
+      color: var(--text-main);
+      font-size: 14px;
+    }
+
+    /* Extra Visit Form */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 14px;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: var(--accent-red);
+      color: #ffffff;
+      border: none;
+      border-radius: 12px;
+      padding: 12px;
+      font-size: 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .extra-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-top: 8px;
+      font-size: 13px;
+    }
+
+    .btn-del {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    /* Bottom Navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 480px;
+      background: rgba(13, 16, 23, 0.96);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+      z-index: 40;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 2px;
+      cursor: pointer;
+      border-radius: 10px;
+    }
+
+    .nav-btn.active {
+      color: var(--accent-cyan);
+      background: rgba(56, 189, 248, 0.08);
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 78px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface-3);
+      color: var(--text-main);
+      border: 1px solid var(--accent-cyan);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      z-index: 60;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand">
+        <img src="icons/icon.svg" alt="San Carlo" width="36" height="36" style="border-radius: 10px; flex-shrink: 0;" />
+        <div>
+          <div class="brand-title">SAN CARLO GIRO</div>
+          <div class="brand-sub">OLED · Spalmatura Giornaliera</div>
+        </div>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn-sm" id="btnWhatsApp" type="button">WhatsApp</button>
+        <button class="btn-danger" id="btnResetAll" type="button">Azzera Tutto</button>
+      </div>
+    </header>
+
+    <main class="content" id="mainContent"></main>
+  </div>
+
+  <div class="toast" id="toastBox"></div>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="giro" type="button">
+      <span>📋</span>
+      <span>Giro Visite</span>
+    </button>
+    <button class="nav-btn" data-tab="spalmatura" type="button">
+      <span>⚖️</span>
+      <span>Spalmatura</span>
+    </button>
+    <button class="nav-btn" data-tab="extra" type="button">
+      <span>➕</span>
+      <span>+ Extra</span>
+    </button>
+    <button class="nav-btn" data-tab="apk" type="button">
+      <span>📱</span>
+      <span>APK / Info</span>
+    </button>
+  </nav>
+
+  <script>
+    const FASCE_MIN = { A: 100, B: 50, C: 25 };
+    const DEFAULT_TARGETS = [12250, 12500, 12875];
+    const BASE_FATTURATO_INIZIALE = 10209;
+    const STORAGE_KEY = "sancarlo_giro_android_v1";
+
+    const DAYS = ["Giovedì", "Venerdì", "Sabato", "Lunedì 30"];
+
+    const INITIAL_CLIENTS = [
+      // GIOVEDI
+      { id: "g1", day: "Giovedì", name: "Di Giovanni frutteria", fascia: "A", extra: false },
+      { id: "g2", day: "Giovedì", name: "Kore", fascia: "B", extra: false },
+      { id: "g3", day: "Giovedì", name: "Di fuccia", fascia: "B", extra: false },
+      { id: "g4", day: "Giovedì", name: "Erreggi", fascia: "B", extra: false },
+      { id: "g5", day: "Giovedì", name: "Smoke shop", fascia: "B", extra: false },
+      { id: "g6", day: "Giovedì", name: "Vistoso", fascia: "C", extra: false },
+      { id: "g7", day: "Giovedì", name: "Agenziano Maria", fascia: "C", extra: false },
+      { id: "g8", day: "Giovedì", name: "Oasi", fascia: "C", extra: false },
+      { id: "g9", day: "Giovedì", name: "Primo caffe", fascia: "C", extra: false },
+      { id: "g10", day: "Giovedì", name: "Garofalo", fascia: "C", extra: false },
+
+      // VENERDI
+      { id: "v1", day: "Venerdì", name: "Drink and more", fascia: "A", extra: false },
+      { id: "v2", day: "Venerdì", name: "Marzia caffe", fascia: "B", extra: false },
+      { id: "v3", day: "Venerdì", name: "La luna", fascia: "B", extra: false },
+      { id: "v4", day: "Venerdì", name: "Munno nicola", fascia: "B", extra: false },
+      { id: "v5", day: "Venerdì", name: "Old market", fascia: "B", extra: false },
+      { id: "v6", day: "Venerdì", name: "Ambrosino", fascia: "B", extra: false },
+      { id: "v7", day: "Venerdì", name: "Bar brule", fascia: "B", extra: false },
+      { id: "v8", day: "Venerdì", name: "Coffe break", fascia: "B", extra: false },
+      { id: "v9", day: "Venerdì", name: "Flii d amico", fascia: "B", extra: false },
+      { id: "v10", day: "Venerdì", name: "Athena", fascia: "C", extra: false },
+      { id: "v11", day: "Venerdì", name: "Fisio", fascia: "C", extra: false },
+      { id: "v12", day: "Venerdì", name: "Le Bon", fascia: "C", extra: false },
+      { id: "v13", day: "Venerdì", name: "Segreti e bugie", fascia: "C", extra: false },
+      { id: "v14", day: "Venerdì", name: "Bar la rotonda", fascia: "C", extra: false },
+      { id: "v15", day: "Venerdì", name: "La rinascita", fascia: "C", extra: false },
+      { id: "v16", day: "Venerdì", name: "Marzano", fascia: "C", extra: false },
+      { id: "v17", day: "Venerdì", name: "Borrozzino", fascia: "C", extra: false },
+      { id: "v18", day: "Venerdì", name: "Tab di santo", fascia: "C", extra: false },
+
+      // SABATO
+      { id: "s1", day: "Sabato", name: "Pimo", fascia: "A", extra: false },
+      { id: "s2", day: "Sabato", name: "Ssd soccer", fascia: "A", extra: false },
+      { id: "s3", day: "Sabato", name: "Bacio", fascia: "A", extra: false },
+      { id: "s4", day: "Sabato", name: "Maudit", fascia: "B", extra: false },
+      { id: "s5", day: "Sabato", name: "Bar colors", fascia: "B", extra: false },
+      { id: "s6", day: "Sabato", name: "Musone", fascia: "B", extra: false },
+      { id: "s7", day: "Sabato", name: "Circolo dopo lavoro", fascia: "B", extra: false },
+      { id: "s8", day: "Sabato", name: "Perla del grano", fascia: "B", extra: false },
+      { id: "s9", day: "Sabato", name: "Mogago", fascia: "C", extra: false },
+      { id: "s10", day: "Sabato", name: "Tartaglione", fascia: "C", extra: false },
+      { id: "s11", day: "Sabato", name: "Fantasia dei dolci", fascia: "C", extra: false },
+
+      // LUNEDI 30
+      { id: "l1", day: "Lunedì 30", name: "Tartaglione", fascia: "A", extra: false },
+      { id: "l2", day: "Lunedì 30", name: "Intercasertana", fascia: "A", extra: false },
+      { id: "l3", day: "Lunedì 30", name: "Punto di ristoro", fascia: "B", extra: false },
+      { id: "l4", day: "Lunedì 30", name: "Di geniale", fascia: "B", extra: false },
+      { id: "l5", day: "Lunedì 30", name: "Ferraro Luca", fascia: "B", extra: false },
+      { id: "l6", day: "Lunedì 30", name: "Centro oasi", fascia: "B", extra: false },
+      { id: "l7", day: "Lunedì 30", name: "Namo", fascia: "C", extra: false },
+      { id: "l8", day: "Lunedì 30", name: "Ali zershan", fascia: "C", extra: false },
+      { id: "l9", day: "Lunedì 30", name: "Cagnacci", fascia: "C", extra: false },
+      { id: "l10", day: "Lunedì 30", name: "Our dream", fascia: "C", extra: false },
+      { id: "l11", day: "Lunedì 30", name: "Caffè giulio", fascia: "C", extra: false },
+      { id: "l12", day: "Lunedì 30", name: "Plana", fascia: "C", extra: false }
+    ];
+
+    function createDefaultState() {
+      return {
+        targets: [...DEFAULT_TARGETS],
+        activeTargetIdx: 1, // 12500 default
+        baseFatturato: BASE_FATTURATO_INIZIALE,
+        selectedDay: "Giovedì",
+        activeTab: "giro",
+        clients: INITIAL_CLIENTS.map((c) => ({
+          ...c,
+          realized: null // null = non ancora inserito, number = realizzato
+        }))
+      };
+    }
+
+    let state = loadState();
+    let resetArmed = false;
+    let resetTimer = null;
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return createDefaultState();
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed.clients) || !Array.isArray(parsed.targets)) {
+          return createDefaultState();
+        }
+        return {
+          ...createDefaultState(),
+          ...parsed
+        };
+      } catch (e) {
+        return createDefaultState();
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (e) {}
+    }
+
+    function showToast(msg) {
+      const box = document.getElementById("toastBox");
+      if (!box) return;
+      box.textContent = msg;
+      box.style.display = "block";
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => {
+        box.style.display = "none";
+      }, 2200);
+    }
+
+    function fmtEur(val) {
+      const n = Number(val || 0);
+      return n.toLocaleString("it-IT", { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + " €";
+    }
+
+    /**
+     * Calcola il fatturato consigliato (deficit incluso) per ciascun cliente
+     * all'interno del GIORNO CORRISPONDENTE, con eventuale riporto solo a giornata chiusa.
+     */
+    function computeDailyRecommendations() {
+      const activeTarget = Number(state.targets[state.activeTargetIdx] || 12500);
+      const realizedGiro = state.clients.reduce(
+        (acc, c) => acc + (c.realized !== null && !Number.isNaN(Number(c.realized)) ? Number(c.realized) : 0),
+        0
+      );
+      const totalCurrent = Number(state.baseFatturato || 0) + realizedGiro;
+      const totalRemainingNeeded = Math.max(0, activeTarget - totalCurrent);
+
+      // Somma minimi di fascia di tutti i clienti non ancora realizzati
+      const pendingClients = state.clients.filter((c) => c.realized === null);
+      const pendingMinSum = pendingClients.reduce((acc, c) => acc + FASCE_MIN[c.fascia], 0);
+      const globalExtraNeeded = Math.max(0, totalRemainingNeeded - pendingMinSum);
+
+      const recMap = {};
+      let carryoverFromPrevDay = 0;
+
+      DAYS.forEach((day) => {
+        const dayClients = state.clients.filter((c) => c.day === day);
+        const dayPending = dayClients.filter((c) => c.realized === null);
+        const dayPendingMinSum = dayPending.reduce((acc, c) => acc + FASCE_MIN[c.fascia], 0);
+
+        // Deficit maturato dai clienti già inseriti nella giornata rispetto al loro minimo di fascia
+        let dayRealizedDeficit = 0;
+        let dayRealizedSum = 0;
+        let dayExpectedMinSum = 0;
+
+        dayClients.forEach((c) => {
+          const baseMin = FASCE_MIN[c.fascia];
+          dayExpectedMinSum += baseMin;
+          if (c.realized !== null && !Number.isNaN(Number(c.realized))) {
+            const r = Number(c.realized);
+            dayRealizedSum += r;
+            if (r < baseMin) {
+              dayRealizedDeficit += baseMin - r;
+            }
+          }
+        });
+
+        // Quota extra globale ripartita proporzionalmente al peso dei minimi dei clienti in attesa del giorno
+        const dayGlobalShare =
+          pendingMinSum > 0 ? (globalExtraNeeded * dayPendingMinSum) / pendingMinSum : 0;
+
+        const totalDayDeficitToSpread = dayRealizedDeficit + carryoverFromPrevDay + dayGlobalShare;
+
+        if (dayPending.length > 0) {
+          dayPending.forEach((c) => {
+            const baseMin = FASCE_MIN[c.fascia];
+            const weight = dayPendingMinSum > 0 ? baseMin / dayPendingMinSum : 1 / dayPending.length;
+            const addedDeficit = totalDayDeficitToSpread * weight;
+            const advised = Math.round((baseMin + addedDeficit) * 100) / 100;
+            recMap[c.id] = {
+              baseMin,
+              advised,
+              deficitAdded: Math.round(addedDeficit * 100) / 100
+            };
+          });
+          // Finché ci sono clienti in attesa nello stesso giorno, la spalmatura resta su di loro
+          carryoverFromPrevDay = 0;
+        } else {
+          // Tutti i clienti del giorno sono chiusi: eventuale deficit non coperto passa al giorno successivo
+          carryoverFromPrevDay = Math.max(0, dayRealizedDeficit + carryoverFromPrevDay);
+        }
+
+        recMap[`__DAY__${day}`] = {
+          day,
+          clientCount: dayClients.length,
+          pendingCount: dayPending.length,
+          dayExpectedMinSum,
+          dayRealizedSum,
+          dayRealizedDeficit: Math.round(dayRealizedDeficit * 100) / 100,
+          dayDeficitToSpread: Math.round(totalDayDeficitToSpread * 100) / 100
+        };
+      });
+
+      return {
+        activeTarget,
+        realizedGiro,
+        totalCurrent,
+        remainingToTarget: Math.max(0, activeTarget - totalCurrent),
+        recMap
+      };
+    }
+
+    function render() {
+      const summary = computeDailyRecommendations();
+      const main = document.getElementById("mainContent");
+      if (!main) return;
+
+      const pct = Math.min(100, Math.round((summary.totalCurrent / Math.max(1, summary.activeTarget)) * 100));
+
+      let html = `
+        <section class="card">
+          <div class="target-header">
+            <span class="section-title">Seleziona Target</span>
+            <span class="badge-pct text-cyan" style="font-size:12px;font-weight:800;">${pct}%</span>
+          </div>
+          <div class="targets-row">
+            ${state.targets
+              .map(
+                (t, idx) => `
+              <button type="button" class="target-pill ${state.activeTargetIdx === idx ? "active" : ""}" onclick="selectTarget(${idx})">
+                <div class="target-pill-label">Target ${idx + 1}</div>
+                <div class="target-pill-val">${fmtEur(t)}</div>
+              </button>
+            `
+              )
+              .join("")}
+          </div>
+
+          <div class="edit-targets-box">
+            ${state.targets
+              .map(
+                (t, idx) => `
+              <div class="mini-field">
+                <label>Modifica T${idx + 1} (€)</label>
+                <input type="number" inputmode="decimal" value="${t}" onchange="updateTargetValue(${idx}, this.value)" />
+              </div>
+            `
+              )
+              .join("")}
+          </div>
+
+          <div class="kpi-grid" style="margin-top: 12px;">
+            <div class="kpi-box">
+              <div class="kpi-label">Fatturato Totale</div>
+              <div class="kpi-val text-emerald">${fmtEur(summary.totalCurrent)}</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">Manca a Target</div>
+              <div class="kpi-val ${summary.remainingToTarget === 0 ? "text-emerald" : "text-gold"}">${fmtEur(summary.remainingToTarget)}</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">Già Fatturato Base</div>
+              <div class="kpi-val text-cyan">${fmtEur(state.baseFatturato)}</div>
+            </div>
+            <div class="kpi-box">
+              <div class="kpi-label">Realizzato Giro</div>
+              <div class="kpi-val">${fmtEur(summary.realizedGiro)}</div>
+            </div>
+          </div>
+
+          <div class="progress-wrap">
+            <div class="progress-bar" style="width:${pct}%"></div>
+          </div>
+        </section>
+      `;
+
+      if (state.activeTab === "giro") {
+        html += renderGiroTab(summary);
+      } else if (state.activeTab === "spalmatura") {
+        html += renderSpalmaturaTab(summary);
+      } else if (state.activeTab === "extra") {
+        html += renderExtraTab();
+      } else if (state.activeTab === "apk") {
+        html += renderApkTab();
+      }
+
+      main.innerHTML = html;
+      updateNavButtons();
+    }
+
+    function renderGiroTab(summary) {
+      const dayStats = summary.recMap[`__DAY__${state.selectedDay}`];
+      const dayClients = state.clients.filter((c) => c.day === state.selectedDay);
+
+      let out = `
+        <div class="days-scroll">
+          ${DAYS.map((d) => {
+            const st = summary.recMap[`__DAY__${d}`];
+            return `
+              <button type="button" class="day-chip ${state.selectedDay === d ? "active" : ""}" onclick="selectDay('${d.replace(/'/g, "\'")}')">
+                ${d} (${st.pendingCount}/${st.clientCount})
+              </button>
+            `;
+          }).join("")}
+        </div>
+
+        <div class="day-banner">
+          <div class="day-banner-top">
+            <span>${state.selectedDay}</span>
+            <span class="text-emerald">Incassato: ${fmtEur(dayStats.dayRealizedSum)}</span>
+          </div>
+          <div class="day-stats-line">
+            <span>Minimi fascia giorno: <strong>${fmtEur(dayStats.dayExpectedMinSum)}</strong></span>
+            <span>·</span>
+            <span>Da spalmare sul giorno: <strong class="text-gold">${fmtEur(dayStats.dayDeficitToSpread)}</strong></span>
+          </div>
+        </div>
+      `;
+
+      out += dayClients
+        .map((c) => {
+          const baseMin = FASCE_MIN[c.fascia];
+          const isDone = c.realized !== null && !Number.isNaN(Number(c.realized));
+          const rec = summary.recMap[c.id] || { baseMin, advised: baseMin, deficitAdded: 0 };
+          const advisedVal = isDone ? Number(c.realized) : rec.advised;
+          const deficitVal = !isDone ? rec.deficitAdded : 0;
+
+          return `
+            <article class="client-card" id="card-${c.id}">
+              <div class="client-top">
+                <div class="client-name">${escapeHtml(c.name)}${c.extra ? " <span class='text-gold' style='font-size:11px;'>(EXTRA)</span>" : ""}</div>
+                <span class="fascia-badge fascia-${c.fascia}">Fascia ${c.fascia}</span>
+              </div>
+
+              <!-- 1. Fatturato consigliato Deficit incluso -->
+              <div class="block-consigliato">
+                <div>
+                  <div class="block-label">Fatturato consigliato Deficit incluso</div>
+                  <div class="consigliato-amount">${fmtEur(advisedVal)}</div>
+                </div>
+                <div>
+                  ${
+                    !isDone && deficitVal > 0
+                      ? `<span class="deficit-tag">+${fmtEur(deficitVal)} deficit</span>`
+                      : `<span class="block-label">${isDone ? "Completato" : "In linea"}</span>`
+                  }
+                </div>
+              </div>
+
+              <!-- 2. Fatturato reale realizzato -->
+              <div class="block-reale">
+                <div class="block-label">Fatturato reale realizzato</div>
+                <div class="reale-input-row">
+                  <input
+                    type="number"
+                    inputmode="decimal"
+                    class="reale-input"
+                    placeholder="0 €"
+                    value="${isDone ? c.realized : ""}"
+                    onchange="setClientRealized('${c.id}', this.value)"
+                  />
+                  <button type="button" class="btn-apply" onclick="applyAdvised('${c.id}', ${advisedVal})">
+                    Applica ${Math.round(advisedVal)}€
+                  </button>
+                </div>
+                <div class="quick-row">
+                  <button type="button" class="q-btn" onclick="stepClientRealized('${c.id}', -10)">-10€</button>
+                  <button type="button" class="q-btn" onclick="stepClientRealized('${c.id}', -5)">-5€</button>
+                  <button type="button" class="q-btn" onclick="stepClientRealized('${c.id}', 5)">+5€</button>
+                  <button type="button" class="q-btn" onclick="stepClientRealized('${c.id}', 10)">+10€</button>
+                  <button type="button" class="q-btn" onclick="clearClientRealized('${c.id}')">Pulisci</button>
+                </div>
+              </div>
+
+              <!-- 3. Fatturato previsto in base alla fascia di appartenenza -->
+              <div class="block-fascia">
+                <span class="block-label">Fatturato previsto in base alla fascia di appartenenza (Fascia ${c.fascia})</span>
+                <span class="fascia-expected-val">${fmtEur(baseMin)}</span>
+              </div>
+            </article>
+          `;
+        })
+        .join("");
+
+      return out;
+    }
+
+    function renderSpalmaturaTab(summary) {
+      return `
+        <section class="card">
+          <div class="section-title" style="margin-bottom:8px;">Riepilogo Spalmatura Giornaliera</div>
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 12px 0;line-height:1.45;">
+            Ogni deficit sotto minimo di fascia o gap residuo sul target viene spalmato sui clienti ancora da fatturare dello <strong>stesso giorno corrispondente</strong>.
+          </p>
+          ${DAYS.map((d) => {
+            const st = summary.recMap[`__DAY__${d}`];
+            return `
+              <div class="extra-item">
+                <div>
+                  <strong>${d}</strong>
+                  <div style="font-size:11px;color:var(--text-muted);">
+                    In attesa: ${st.pendingCount}/${st.clientCount} · Incassato: ${fmtEur(st.dayRealizedSum)}
+                  </div>
+                </div>
+                <div style="text-align:right;">
+                  <div class="text-gold" style="font-weight:800;">+${fmtEur(st.dayDeficitToSpread)}</div>
+                  <div style="font-size:10px;color:var(--text-muted);">deficit su giorno</div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </section>
+      `;
+    }
+
+    function renderExtraTab() {
+      const extras = state.clients.filter((c) => c.extra);
+      return `
+        <section class="card">
+          <div class="section-title" style="margin-bottom:10px;">Aggiungi Visita Extra</div>
+          <div class="form-group">
+            <label>Giorno lavorativo</label>
+            <select id="extraDay">
+              ${DAYS.map((d) => `<option value="${d}">${d}</option>`).join("")}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Nome cliente / punto vendita</label>
+            <input type="text" id="extraName" placeholder="Es. Bar Centrale" />
+          </div>
+          <div class="form-group">
+            <label>Fascia di appartenenza</label>
+            <select id="extraFascia">
+              <option value="A">Fascia A (Minimo 100 €)</option>
+              <option value="B" selected>Fascia B (Minimo 50 €)</option>
+              <option value="C">Fascia C (Minimo 25 €)</option>
+            </select>
+          </div>
+          <button type="button" class="btn-primary" onclick="addExtraClient()">Salva Visita Extra</button>
+        </section>
+
+        <section class="card">
+          <div class="section-title">Visite Extra Aggiunte (${extras.length})</div>
+          ${
+            extras.length === 0
+              ? `<p style="font-size:12px;color:var(--text-muted);margin-top:8px;">Nessuna visita extra inserita.</p>`
+              : extras
+                  .map(
+                    (c) => `
+                <div class="extra-item">
+                  <div>
+                    <strong>${escapeHtml(c.name)}</strong>
+                    <div style="font-size:11px;color:var(--text-muted);">${c.day} · Fascia ${c.fascia} (${fmtEur(FASCE_MIN[c.fascia])})</div>
+                  </div>
+                  <button type="button" class="btn-del" onclick="removeClient('${c.id}')">Elimina</button>
+                </div>
+              `
+                  )
+                  .join("")
+          }
+        </section>
+      `;
+    }
+
+    function renderApkTab() {
+      return `
+        <section class="card">
+          <div class="section-title" style="margin-bottom:8px;">GitHub &amp; PWABuilder (APK Android)</div>
+          <p style="font-size:13px;color:var(--text-muted);margin:0 0 10px 0;line-height:1.5;">
+            1. Carica nella root del tuo repository GitHub: <strong>index.html</strong>, <strong>manifest.json</strong>, <strong>sw.js</strong> e la cartella <strong>icons/</strong>.<br/>
+            2. Attiva <strong>GitHub Pages</strong> dalle impostazioni del repo per ottenere l'URL HTTPS pubblico.<br/>
+            3. Incolla l'URL HTTPS su <strong>PWABuilder.com</strong>, verifica che il Manifest e il Service Worker siano rilevati e scarica il pacchetto <strong>Android APK / AAB</strong>.
+          </p>
+        </section>
+      `;
+    }
+
+    function updateNavButtons() {
+      document.querySelectorAll(".nav-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.dataset.tab === state.activeTab);
+      });
+    }
+
+    function escapeHtml(str) {
+      return String(str || "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    // Actions
+    window.selectTarget = function (idx) {
+      state.activeTargetIdx = idx;
+      saveState();
+      render();
+    };
+
+    window.updateTargetValue = function (idx, val) {
+      const num = parseFloat(val);
+      if (!Number.isNaN(num) && num > 0) {
+        state.targets[idx] = num;
+        saveState();
+        render();
+      }
+    };
+
+    window.selectDay = function (day) {
+      state.selectedDay = day;
+      saveState();
+      render();
+    };
+
+    window.setClientRealized = function (id, val) {
+      const client = state.clients.find((c) => c.id === id);
+      if (!client) return;
+      if (val === "" || val === null || val === undefined) {
+        client.realized = null;
+      } else {
+        const num = parseFloat(val);
+        client.realized = Number.isNaN(num) ? null : Math.max(0, num);
+      }
+      saveState();
+      render();
+    };
+
+    window.applyAdvised = function (id, amount) {
+      const client = state.clients.find((c) => c.id === id);
+      if (!client) return;
+      client.realized = Math.max(0, Math.round(Number(amount) * 100) / 100);
+      saveState();
+      render();
+      showToast("Consigliato applicato a " + client.name);
+    };
+
+    window.stepClientRealized = function (id, delta) {
+      const client = state.clients.find((c) => c.id === id);
+      if (!client) return;
+      const current = client.realized === null ? FASCE_MIN[client.fascia] : Number(client.realized);
+      client.realized = Math.max(0, Math.round((current + delta) * 100) / 100);
+      saveState();
+      render();
+    };
+
+    window.clearClientRealized = function (id) {
+      const client = state.clients.find((c) => c.id === id);
+      if (!client) return;
+      client.realized = null;
+      saveState();
+      render();
+    };
+
+    window.addExtraClient = function () {
+      const dayEl = document.getElementById("extraDay");
+      const nameEl = document.getElementById("extraName");
+      const fasciaEl = document.getElementById("extraFascia");
+      const name = (nameEl?.value || "").trim();
+      if (!name) {
+        showToast("Inserisci il nome del cliente");
+        return;
+      }
+      state.clients.push({
+        id: "extra_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6),
+        day: dayEl?.value || state.selectedDay,
+        name,
+        fascia: fasciaEl?.value || "B",
+        extra: true,
+        realized: null
+      });
+      nameEl.value = "";
+      saveState();
+      render();
+      showToast("Visita extra aggiunta");
+    };
+
+    window.removeClient = function (id) {
+      state.clients = state.clients.filter((c) => c.id !== id);
+      saveState();
+      render();
+      showToast("Visita rimossa");
+    };
+
+    // Reset all with double-tap guard
+    const btnReset = document.getElementById("btnResetAll");
+    btnReset.addEventListener("click", () => {
+      if (!resetArmed) {
+        resetArmed = true;
+        btnReset.textContent = "Conferma Reset?";
+        btnReset.classList.add("armed");
+        clearTimeout(resetTimer);
+        resetTimer = setTimeout(() => {
+          resetArmed = false;
+          btnReset.textContent = "Azzera Tutto";
+          btnReset.classList.remove("armed");
+        }, 3500);
+        return;
+      }
+      resetArmed = false;
+      clearTimeout(resetTimer);
+      btnReset.textContent = "Azzera Tutto";
+      btnReset.classList.remove("armed");
+      state = createDefaultState();
+      saveState();
+      render();
+      showToast("Tutti i dati sono stati azzerati");
+    });
+
+    // WhatsApp summary
+    document.getElementById("btnWhatsApp").addEventListener("click", () => {
+      const s = computeDailyRecommendations();
+      const lines = [
+        `*SAN CARLO GIRO - RIEPILOGO*`,
+        `Target attivo: *${fmtEur(s.activeTarget)}*`,
+        `Fatturato totale: *${fmtEur(s.totalCurrent)}*`,
+        `Residuo a target: *${fmtEur(s.remainingToTarget)}*`,
+        `Realizzato giro: *${fmtEur(s.realizedGiro)}*`
+      ];
+      const text = lines.join("
+");
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast("Riepilogo copiato per WhatsApp")).catch(() => {});
+      } else {
+        showToast("Riepilogo pronto");
+      }
+    });
+
+    // Tab navigation
+    document.querySelectorAll(".nav-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.activeTab = btn.dataset.tab;
+        saveState();
+        render();
+      });
+    });
+
+    // Register Service Worker
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+
+    render();
+  </script>
+</body>
+</html>
